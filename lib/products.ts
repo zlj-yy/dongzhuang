@@ -21,6 +21,14 @@ function escapeLike(value: string): string {
   return value.replace(/[\\%_]/g, (ch) => `\\${ch}`);
 }
 
+/** 演示产品名称前缀（本地开发/测试数据，不对外展示） */
+const DEMO_NAME_PREFIX = "[演示]";
+
+/** 是否为真实产品（非演示数据）；用于查询层过滤，避免演示产品出现在线上。 */
+function isRealProduct(p: Product): boolean {
+  return !p.name.startsWith(DEMO_NAME_PREFIX);
+}
+
 /** 合并两批产品：按 id 去重（保留首次出现），再按名称排序 */
 function mergeAndSortProducts(a: Product[], b: Product[]): Product[] {
   const seen = new Set<string>();
@@ -49,11 +57,12 @@ export async function searchProducts(rawQuery: string): Promise<Product[]> {
     // 注：若关键词含逗号等 PostgREST 过滤语法特殊字符，.or() 存在边界情况；
     // MVP 阶段产品名/品牌/成分含逗号极少，暂不处理。
 
-    // 1) 产品名 / 品牌命中
+    // 1) 产品名 / 品牌命中（排除演示产品）
     const { data: byName, error: nameError } = await supabase
       .from("products")
       .select("*")
       .or(`name.ilike.${pattern},brand.ilike.${pattern}`)
+      .not("name", "ilike", "[演示]%")
       .order("name")
       .limit(50);
 
@@ -89,10 +98,12 @@ export async function searchProducts(rawQuery: string): Promise<Product[]> {
         throw new Error("搜索失败，请稍后重试");
       }
 
-      // 多对一关联 products(*) 返回单个对象，这里按运行时对象形态断言
-      byIngredient = (relations ?? []).flatMap((row) =>
-        row.products ? [row.products as unknown as Product] : [],
-      );
+      // 多对一关联 products(*) 返回单个对象，这里按运行时对象形态断言；并过滤演示产品
+      byIngredient = (relations ?? [])
+        .flatMap((row) =>
+          row.products ? [row.products as unknown as Product] : [],
+        )
+        .filter(isRealProduct);
     }
 
     return mergeAndSortProducts((byName as Product[]) ?? [], byIngredient).slice(
@@ -131,7 +142,7 @@ export async function searchProducts(rawQuery: string): Promise<Product[]> {
         )
       : [];
 
-  return mergeAndSortProducts(byName, byIngredient);
+  return mergeAndSortProducts(byName, byIngredient).filter(isRealProduct);
 }
 
 /**
@@ -145,6 +156,7 @@ export async function getFeaturedProducts(limit = 6): Promise<Product[]> {
     const { data, error } = await supabase
       .from("products")
       .select("*")
+      .not("name", "ilike", "[演示]%")
       .order("name")
       .limit(limit);
 
@@ -155,7 +167,7 @@ export async function getFeaturedProducts(limit = 6): Promise<Product[]> {
     return (data as Product[]) ?? [];
   }
 
-  return demoProducts.slice(0, limit);
+  return demoProducts.filter(isRealProduct).slice(0, limit);
 }
 
 /**
