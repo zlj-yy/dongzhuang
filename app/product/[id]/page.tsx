@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getProductById } from "@/lib/products";
 import type { IngredientWithPosition } from "@/lib/products";
 import { displayCategory } from "@/lib/category";
 import IngredientTable from "@/components/IngredientTable";
+import ProductImage from "@/components/ProductImage";
 
 export async function generateMetadata({
   params,
@@ -86,15 +86,11 @@ export default async function ProductPage({
 
       {/* 产品基本信息（含首屏「成分概览」） */}
       <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6">
-        {product.image_url ? (
-          <Image
-            src={product.image_url}
-            alt={product.name}
-            width={96}
-            height={96}
-            className="mb-4 h-24 w-24 rounded-lg object-cover"
-          />
-        ) : null}
+        <ProductImage
+          src={product.image_url}
+          alt={product.name}
+          className="mb-4 h-24 w-24"
+        />
 
         <p className="text-sm text-zinc-500">{product.brand}</p>
         <h1 className="mt-1 text-xl font-semibold leading-snug text-zinc-900">
