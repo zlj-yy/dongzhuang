@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
 import ProductCard from "@/components/ProductCard";
 import { searchProducts, MAX_QUERY_LENGTH } from "@/lib/products";
@@ -15,14 +16,19 @@ export default async function SearchPage({
   const rawQuery = typeof params.q === "string" ? params.q : "";
   const query = rawQuery.trim();
 
-  // 空搜索
+  // 无搜索关键词
   if (!query) {
     return (
       <div className="mx-auto w-full max-w-2xl px-4 py-16">
         <SearchBar />
-        <p className="mt-10 text-center text-sm text-zinc-400">
-          输入产品名称或品牌，开始搜索
-        </p>
+        <div className="mt-12 text-center">
+          <p className="text-base text-zinc-600">
+            输入产品名、品牌或成分开始搜索。
+          </p>
+          <p className="mt-2 text-sm text-zinc-400">
+            例如：薇诺娜、烟酰胺、甘油
+          </p>
+        </div>
       </div>
     );
   }
@@ -42,26 +48,40 @@ export default async function SearchPage({
   const results = await searchProducts(query);
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-16">
+    <div className="mx-auto w-full max-w-2xl px-4 py-10">
       <SearchBar defaultValue={query} />
-      <div className="mt-8">
-        {results.length === 0 ? (
-          <p className="text-center text-sm text-zinc-400">
-            没有找到与「{query}」相关的产品，换个关键词试试
+
+      {results.length === 0 ? (
+        <div className="mt-10 rounded-2xl border border-zinc-200 bg-white p-8 text-center">
+          <p className="text-base font-medium text-zinc-900">没有找到相关内容</p>
+          <p className="mt-3 text-sm text-zinc-500">你可以尝试：</p>
+          <ul className="mt-2 space-y-1.5 text-sm text-zinc-500">
+            <li>· 检查关键词是否正确</li>
+            <li>· 搜索品牌名称</li>
+            <li>· 搜索具体成分名称</li>
+          </ul>
+          <Link
+            href="/"
+            className="mt-6 inline-block text-sm text-zinc-500 transition-colors hover:text-zinc-700"
+          >
+            ← 返回首页
+          </Link>
+        </div>
+      ) : (
+        <div className="mt-8">
+          <h1 className="text-lg font-semibold text-zinc-900">
+            “{query}”的搜索结果
+          </h1>
+          <p className="mt-1 text-sm text-zinc-500">
+            找到 {results.length} 个相关产品
           </p>
-        ) : (
-          <>
-            <p className="mb-4 text-sm text-zinc-500">
-              找到 {results.length} 个相关产品
-            </p>
-            <ul className="flex flex-col gap-3">
-              {results.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </ul>
-          </>
-        )}
-      </div>
+          <ul className="mt-6 flex flex-col gap-3">
+            {results.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

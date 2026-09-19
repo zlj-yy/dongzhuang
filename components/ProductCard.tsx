@@ -15,15 +15,15 @@ export default function ProductCard({ product }: { product: Product }) {
           className="h-20 w-20"
         />
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          <p className="text-xs text-zinc-400">{product.brand}</p>
+          <div className="mt-0.5 flex items-center gap-2">
             <h2 className="font-medium text-zinc-900">{product.name}</h2>
             <span className="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600">
               {product.category}
             </span>
           </div>
-          <p className="mt-1 text-sm text-zinc-500">{product.brand}</p>
           {product.description ? (
-            <p className="mt-2 text-sm leading-6 text-zinc-400">
+            <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-zinc-400">
               {product.description}
             </p>
           ) : null}
